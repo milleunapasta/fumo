@@ -142,71 +142,82 @@ function init(loadedFiles) {
         mouseY = event.clientY;
     });
 
-    function animate() {
-        requestAnimationFrame(animate);
-        slabOp.advect.slab.uniforms.velocity = {
-            type: 't',
-            value: slabOp.velocity.slab.state.texture
-        };
-
-        let splatPosition = new THREE.Vector2(
-            randomBetween(window.innerWidth / 2 - 200, window.innerWidth / 2 + 200),
-            window.innerHeight / 2 + 200
-        );
-        splatPosition.x /= window.innerWidth;
-        splatPosition.y /= window.innerHeight;
-        splatPosition.y = 1 - splatPosition.y;
-
-        let radius = guiParams["Radius"] / 100;
-        let inkColor = new THREE.Color(guiParams.inkGuiParams['Ink Color']);
-
-        // Esegui prima gli splat per buoyancy ed ink standard…
-        slabOp.splatSlab(
-            slabOp.buoyancy.slab,
-            splatPosition,
-            new THREE.Vector3(guiParams.densityGuiParams['Rel. Density'], guiParams.temperatureGuiParams["Rel. Temp"], 0),
-            radius
-        );
-
-        slabOp.splatSlab(
-            slabOp.ink.slab,
-            splatPosition,
-            new THREE.Vector3(inkColor.r, inkColor.g, inkColor.b),
-            radius
-        );
-
-        if (slabOp.velocity && slabOp.velocity.slab) {
-            let mouseUV = new THREE.Vector2(mouseX / window.innerWidth, 1 - (mouseY / window.innerHeight));
-            let influenceRadius = LARGHEZZA_INFLUENZA_MOUSE / window.innerWidth;
-
-            // Applica multipli splat intorno al mouse per una repulsione radiale pura
-            for (let i = 0; i < 10; i++) {
-                // Genera un offset casuale attorno al mouse
-                let angle = Math.random() * Math.PI * 2;
-                let offsetAmount = Math.random() * (influenceRadius / 2);
-                let offset = new THREE.Vector2(Math.cos(angle) * offsetAmount, Math.sin(angle) * offsetAmount);
-                let splatUV = new THREE.Vector2().addVectors(mouseUV, offset);
-
-                // Calcola la direzione radiale dal centro del mouse al punto splat
-                let dir = splatUV.clone().sub(mouseUV);
-                if (dir.length() !== 0) {
-                    dir.normalize();
+    const FPS_LIMIT = 30; // Impostiamo il frame rate a 30 FPS
+    let lastFrameTime = 0;
+    
+    function animate(timestamp) {
+        // Calcoliamo il deltaTime
+        const deltaTime = timestamp - lastFrameTime;
+    
+        if (deltaTime >= 1000 / FPS_LIMIT) {  // Se il tempo trascorso è maggiore del limite (in millisecondi)
+            lastFrameTime = timestamp; // Aggiorniamo il timestamp dell'ultimo frame
+    
+            // Logica di animazione (così come nel tuo codice originale)
+            slabOp.advect.slab.uniforms.velocity = {
+                type: 't',
+                value: slabOp.velocity.slab.state.texture
+            };
+    
+            let splatPosition = new THREE.Vector2(
+                randomBetween(window.innerWidth / 2 - 200, window.innerWidth / 2 + 200),
+                window.innerHeight / 2 + 200
+            );
+            splatPosition.x /= window.innerWidth;
+            splatPosition.y /= window.innerHeight;
+            splatPosition.y = 1 - splatPosition.y;
+    
+            let radius = guiParams["Radius"] / 100;
+            let inkColor = new THREE.Color(guiParams.inkGuiParams['Ink Color']);
+    
+            // Esegui prima gli splat per buoyancy ed ink standard…
+            slabOp.splatSlab(
+                slabOp.buoyancy.slab,
+                splatPosition,
+                new THREE.Vector3(guiParams.densityGuiParams['Rel. Density'], guiParams.temperatureGuiParams["Rel. Temp"], 0),
+                radius
+            );
+    
+            slabOp.splatSlab(
+                slabOp.ink.slab,
+                splatPosition,
+                new THREE.Vector3(inkColor.r, inkColor.g, inkColor.b),
+                radius
+            );
+    
+            if (slabOp.velocity && slabOp.velocity.slab) {
+                let mouseUV = new THREE.Vector2(mouseX / window.innerWidth, 1 - (mouseY / window.innerHeight));
+                let influenceRadius = LARGHEZZA_INFLUENZA_MOUSE / window.innerWidth;
+    
+                // Applica multipli splat intorno al mouse per una repulsione radiale pura
+                for (let i = 0; i < 10; i++) {
+                    // Genera un offset casuale attorno al mouse
+                    let angle = Math.random() * Math.PI * 2;
+                    let offsetAmount = Math.random() * (influenceRadius / 2);
+                    let offset = new THREE.Vector2(Math.cos(angle) * offsetAmount, Math.sin(angle) * offsetAmount);
+                    let splatUV = new THREE.Vector2().addVectors(mouseUV, offset);
+    
+                    // Calcola la direzione radiale dal centro del mouse al punto splat
+                    let dir = splatUV.clone().sub(mouseUV);
+                    if (dir.length() !== 0) {
+                        dir.normalize();
+                    }
+                    // Forza la componente verticale a zero per avere solo spinta laterale
+                    dir.y = 0;
+                    let force = new THREE.Vector3(dir.x, 0, 0).multiplyScalar(FORZA_REPULSIONE);
+    
+                    // Applica lo splat SOLO sul canale di velocity
+                    slabOp.splatSlab(slabOp.buoyancy.slab, splatUV, force, influenceRadius);
                 }
-                // Forza la componente verticale a zero per avere solo spinta laterale
-                dir.y = 0;
-                let force = new THREE.Vector3(dir.x, 0, 0).multiplyScalar(FORZA_REPULSIONE);
-
-                // Applica lo splat SOLO sul canale di velocity
-                slabOp.splatSlab(slabOp.buoyancy.slab, splatUV, force, influenceRadius);
             }
+    
+            slabOp.step();
+            colorizer.renderFunction(renderer);
         }
-
-        slabOp.step();
-        colorizer.renderFunction(renderer);
-        // Chiama la funzione per visualizzare il render target di debug
-        //showRenderTarget(renderer, slabOp.ink.slab.state);
+    
+        requestAnimationFrame(animate); // Chiedi il prossimo frame
     }
-    animate();
+    
+    animate(performance.now()); // Avvia la prima animazione passando il timestamp iniziale
 
     function showRenderTarget(renderer, target) {
         const texture = target.texture || (target.state && target.state.texture);
