@@ -10,6 +10,8 @@ const initialPosition = new THREE.Vector2(randomBetween(initialLeft - 50, initia
 
 let mouse = new THREE.Vector2(0, 0);
 
+let prefix = 'https://raw.githubusercontent.com/milleunapasta/fumo/refs/heads/main/'
+
 
 // Load a list of files in a given path. Executes `callback` upon completion with the map of file names to text as an argument
 function loadFiles(path, fileNames, callback) {
@@ -232,5 +234,5 @@ function randomBetween(min, max) {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-    loadFiles('https://github.com/milleunapasta/fumo/shaders', SLABOPS_REQUIRED_SHADER_FILES.concat(COLOR_REQUIRED_SHADER_FILES), init);
+    loadFiles(prefix + 'shaders', SLABOPS_REQUIRED_SHADER_FILES.concat(COLOR_REQUIRED_SHADER_FILES), init);
 });
