@@ -1,0 +1,51 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Smoke Simulator</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            color: #ddd;
+            background: #fff;
+            background-color: #000;
+            font-family: 'Oswald', sans-serif;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 100;
+        }
+
+        .pentola {
+            position: absolute;
+            top: 81%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 31%;
+            height: 36%;
+            z-index: 100;
+        }
+    </style>
+</head>
+
+<body>
+    <img src="pentola.png" class="pentola">
+    <canvas class="smoke"></canvas>
+    <script src="inc/js/three.min.js"></script>
+    <!-- <script src="inc/js/dat.gui.min.js"></script> -->
+    <!-- <script src="inc/js/mouse.js"></script> -->
+    <script src="inc/js/colorizer.js"></script>
+    <script src="inc/js/slabops.js"></script>
+    <script src="inc/js/main.js"></script>
+
+</body>
+
+</html>
